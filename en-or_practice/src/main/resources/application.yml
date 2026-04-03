@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: word-practice-spring
+  thymeleaf:
+    cache: false
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true

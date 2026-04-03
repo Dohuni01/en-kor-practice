@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">영어 퀴즈 &amp; 플래시카드 메이커</title>
+    <meta name="description" th:content="${pageDescription}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="hero">
+        <div class="hero-copy">
+            <h1 th:text="${pageTitle}">영어 퀴즈 &amp; 플래시카드 메이커</h1>
+            <p class="hero-text">
+                한 줄에 <strong>영어 + 한국어 뜻</strong>만 적으면 바로 퀴즈와 플래시카드 학습을 할 수 있습니다.
+            </p>
+            <div class="hero-badges">
+                <span>퀴즈 자동 생성</span>
+                <span>플래시카드 학습</span>
+                <span>오답 다시 풀기</span>
+                <span>로컬 저장</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="content-grid">
+        <section class="panel input-panel">
+            <div class="section-head">
+                <div>
+                    <p class="section-step">STEP 1</p>
+                    <h2>문장 입력</h2>
+                </div>
+                <span class="soft-chip">한 줄에 하나씩 입력</span>
+            </div>
+            <p class="helper-text">
+                영어 문장 뒤에 한국어 뜻을 붙여서 입력하세요. 서버는 <strong>첫 번째 한글부터 한국어 뜻</strong>으로 인식합니다.
+                영어 정답에 여러 표현을 허용하고 싶으면 <strong>|</strong> 또는 <strong>[ ]</strong>를 써도 됩니다.
+            </p>
+            <textarea id="sourceInput" spellcheck="false" placeholder="예)&#10;Organizing documents 서류를 정돈하다&#10;Looking out a window 창밖을 보다"></textarea>
+            <div class="button-row">
+                <button id="loadSampleBtn" type="button">예시 불러오기</button>
+                <button id="clearInputBtn" type="button">입력 지우기</button>
+                <button id="saveInputBtn" type="button">로컬 저장</button>
+                <button id="startBtn" class="primary" type="button">퀴즈 시작</button>
+            </div>
+            <div id="parseInfo" class="parse-info">문장을 입력하면 자동으로 형식을 확인합니다.</div>
+        </section>
+
+        <aside class="panel preview-panel">
+            <div class="section-head compact">
+                <div>
+                    <p class="section-step">STEP 2</p>
+                    <h2>입력 미리보기</h2>
+                </div>
+            </div>
+            <div class="preview-stats">
+                <article class="mini-stat">
+                    <strong id="parsedCount">0</strong>
+                    <span>인식한 카드</span>
+                </article>
+                <article class="mini-stat">
+                    <strong id="invalidCount">0</strong>
+                    <span>형식 확인 필요</span>
+                </article>
+            </div>
+            <p id="previewHint" class="helper-text small">입력하면 여기서 바로 카드 미리보기를 볼 수 있습니다.</p>
+            <div id="previewList" class="preview-list"></div>
+        </aside>
+
+        <section class="panel settings-panel">
+            <div class="section-head compact">
+                <div>
+                    <p class="section-step">STEP 3</p>
+                    <h2>퀴즈 설정</h2>
+                </div>
+            </div>
+            <div class="setting-grid">
+                <div class="setting-row">
+                    <label><input type="radio" name="mode" value="en-to-ko" checked> 영어 → 한국어</label>
+                    <label><input type="radio" name="mode" value="ko-to-en"> 한국어 → 영어</label>
+                    <label><input type="radio" name="mode" value="mixed"> 랜덤 혼합</label>
+                </div>
+                <div class="setting-row">
+                    <label><input type="checkbox" id="randomOrder" checked> 문제 순서 섞기</label>
+                    <label><input type="checkbox" id="ignoreSpaces" checked> 띄어쓰기 차이 무시</label>
+                    <label><input type="checkbox" id="ignoreCase" checked> 영어 대소문자 무시</label>
+                </div>
+            </div>
+            <p class="helper-text small">엔터로 정답 확인, 채점 뒤에는 엔터로 다음 문제로 넘어갑니다.</p>
+        </section>
+
+        <section class="panel study-panel">
+            <div class="section-head compact">
+                <div>
+                    <p class="section-step">STEP 4</p>
+                    <h2>단어 카드 학습</h2>
+                </div>
+            </div>
+            <p class="helper-text">
+                카드 한 장씩 넘기면서 외울 수 있게 만들었습니다. 기본은 <strong>한국어 먼저</strong>이고,
+                카드를 누르면 영어가 보입니다.
+            </p>
+            <div class="setting-grid">
+                <div class="setting-row">
+                    <label><input type="radio" name="studyMode" value="ko-front" checked> 한국어 먼저</label>
+                    <label><input type="radio" name="studyMode" value="en-front"> 영어 먼저</label>
+                    <label><input type="radio" name="studyMode" value="mixed"> 랜덤</label>
+                    <label><input type="checkbox" id="studyRandomOrder" checked> 카드 순서 섞기</label>
+                </div>
+            </div>
+            <div class="button-row">
+                <button id="startStudyBtn" class="primary" type="button">단어 카드 시작</button>
+                <button id="shuffleStudyBtn" type="button">카드 다시 섞기</button>
+            </div>
+
+            <div id="studySection" class="study-wrap hidden">
+                <div class="quiz-header">
+                    <strong id="studyProgressText">카드 0 / 0</strong>
+                    <strong id="studyModeBadge">한국어 먼저</strong>
+                </div>
+
+                <div class="progress-wrap" aria-hidden="true">
+                    <div id="studyProgressBar" class="progress-bar"></div>
+                </div>
+
+                <button id="studyCard" class="flashcard" type="button" aria-label="학습 카드">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-face flashcard-front">
+                            <span id="flashcardFrontLabel" class="flashcard-tag">앞면 · 한국어</span>
+                            <div id="flashcardFrontText" class="flashcard-text"></div>
+                            <div class="flashcard-hint">카드를 누르면 뒤집힙니다.</div>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <span id="flashcardBackLabel" class="flashcard-tag">뒷면 · 영어</span>
+                            <div id="flashcardBackText" class="flashcard-text"></div>
+                            <div class="flashcard-hint">다시 누르면 앞면으로 돌아갑니다.</div>
+                        </div>
+                    </div>
+                </button>
+
+                <p id="studyHintText" class="helper-text small">현재 카드는 앞면이 보이는 상태입니다.</p>
+
+                <div class="button-row compact">
+                    <button id="studyPrevBtn" type="button">이전 카드</button>
+                    <button id="flipCardBtn" type="button">카드 뒤집기</button>
+                    <button id="studyNextBtn" class="primary" type="button">다음 카드</button>
+                    <button id="studyRestartBtn" type="button">처음부터 다시</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="quizSection" class="panel quiz-panel hidden">
+            <div class="quiz-header">
+                <strong id="progressText">문제 0 / 0</strong>
+                <strong id="scoreText">점수 0</strong>
+            </div>
+
+            <div class="progress-wrap" aria-hidden="true">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+
+            <div id="modeBadge" class="mode-badge">영어 → 한국어</div>
+            <div id="questionGuide" class="question-guide">문제를 보고 답을 입력하세요.</div>
+
+            <div class="question-card">
+                <div id="questionText" class="question-text"></div>
+            </div>
+
+            <div class="answer-row">
+                <input id="answerInput" type="text" autocomplete="off" placeholder="정답을 입력하세요">
+                <button id="checkBtn" class="primary" type="button">정답 확인</button>
+            </div>
+
+            <div class="button-row compact">
+                <button id="showAnswerBtn" type="button">정답 보기</button>
+                <button id="skipBtn" type="button">건너뛰기</button>
+                <button id="nextBtn" type="button" disabled>다음 문제</button>
+                <button id="restartBtn" type="button">처음부터 다시</button>
+            </div>
+
+            <div id="feedback" class="feedback hidden"></div>
+            <div id="answerReveal" class="answer-reveal hidden"></div>
+        </section>
+
+        <section id="resultSection" class="panel result-panel hidden">
+            <div class="section-head compact">
+                <div>
+                    <p class="section-step">STEP 5</p>
+                    <h2>결과 정리</h2>
+                </div>
+            </div>
+            <div id="resultSummary"></div>
+            <div class="button-row compact top-gap">
+                <button id="retryWrongBtn" type="button">오답만 다시 풀기</button>
+            </div>
+            <div id="reviewList" class="review-list"></div>
+            <p class="footer-note">
+                지금 버전은 브라우저에서 바로 돌 수 있도록 프론트는 가볍게 두고,
+                입력 파싱은 스프링에서 처리하게 만든 구조입니다. 나중에 원하면 로그인, DB 저장, 오답노트까지 붙이기 쉽습니다.
+            </p>
+        </section>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    window.__APP__ = {
+        pageTitle: /*[[${pageTitle}]]*/ '영어 퀴즈 & 플래시카드 메이커',
+        sampleData: /*[[${sampleData}]]*/ ''
+    };
+</script>
+<script defer th:src="@{/js/app.js}"></script>
+</body>
+</html>

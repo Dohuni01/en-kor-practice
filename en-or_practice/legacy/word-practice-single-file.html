@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>영어 퀴즈 & 플래시카드 메이커</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --subtle: #6b7280;
+      --line: #d7deea;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --success: #166534;
+      --success-soft: #dcfce7;
+      --danger: #b91c1c;
+      --danger-soft: #fee2e2;
+      --warning: #92400e;
+      --warning-soft: #fef3c7;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 22%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--subtle);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(215, 222, 234, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .panel p.helper,
+    .small-note {
+      margin: 0 0 14px;
+      color: var(--subtle);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 250px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.6;
+      background: #fbfdff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus,
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .action-row,
+    .setting-row,
+    .quiz-actions,
+    .review-actions,
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-row {
+      margin-top: 14px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.06s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      border-color: #9fb5e8;
+      background: #f8fbff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: #1f57ce;
+      border-color: #1f57ce;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .parse-info {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: var(--subtle);
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px dashed var(--line);
+    }
+
+    .parse-info strong {
+      color: var(--text);
+    }
+
+    .setting-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .setting-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .progress-wrap {
+      height: 12px;
+      width: 100%;
+      background: #edf2f7;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0 18px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      transition: width 0.25s ease;
+    }
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .question-guide {
+      color: var(--subtle);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .question-card {
+      padding: 24px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: clamp(22px, 3vw, 32px);
+      line-height: 1.4;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: keep-all;
+    }
+
+    .answer-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1 1 420px;
+      min-width: 220px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 15px 16px;
+      font: inherit;
+      font-size: 16px;
+      background: #fbfdff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .feedback,
+    .answer-reveal {
+      border-radius: 14px;
+      padding: 14px 16px;
+      line-height: 1.7;
+      border: 1px solid transparent;
+    }
+
+    .feedback {
+      margin-top: 10px;
+    }
+
+    .feedback.success {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: #86efac;
+    }
+
+    .feedback.error {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: #fca5a5;
+    }
+
+    .feedback.warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-color: #fcd34d;
+    }
+
+    .answer-reveal {
+      margin-top: 10px;
+      background: #f8fafc;
+      border-color: var(--line);
+    }
+
+    .answer-reveal h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .answer-pair {
+      display: grid;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #e5eefb;
+      color: #1849a9;
+      font-size: 12px;
+      font-weight: 800;
+      margin-right: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .stats {
+      margin-top: 8px;
+    }
+
+    .stat-card {
+      flex: 1 1 160px;
+      min-width: 140px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card span {
+      color: var(--subtle);
+      font-size: 14px;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .review-card {
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 16px;
+      background: #fff;
+    }
+
+    .review-card.correct {
+      border-color: #a7f3d0;
+      background: #f0fdf4;
+    }
+
+    .review-card.wrong {
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .review-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status-pill.correct {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-pill.wrong {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .review-card .line {
+      margin: 4px 0;
+      line-height: 1.65;
+    }
+
+    .review-card .label {
+      color: var(--subtle);
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+
+    .study-wrap {
+      margin-top: 18px;
+    }
+
+    .flashcard {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      perspective: 1400px;
+      border-radius: 26px;
+    }
+
+    .flashcard:hover {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .flashcard:focus-visible {
+      outline: none;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+      transform-style: preserve-3d;
+      transition: transform 0.65s ease;
+    }
+
+    .flashcard.is-flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 28px 26px;
+      border-radius: 26px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      text-align: left;
+    }
+
+    .flashcard-front {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .flashcard-back {
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(37, 99, 235, 0.1);
+      color: #1d4ed8;
+    }
+
+    .flashcard-text {
+      width: 100%;
+      font-size: clamp(24px, 3.6vw, 36px);
+      line-height: 1.45;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: keep-all;
+      text-align: left;
+    }
+
+    .flashcard-hint {
+      margin-top: auto;
+      color: var(--subtle);
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+
+    .flashcard:focus-visible .flashcard-face {
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16), var(--shadow);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--subtle);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        padding: 20px 14px 42px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .question-card {
+        padding: 18px;
+      }
+
+      .flashcard-inner {
+        min-height: 270px;
+      }
+
+      .flashcard-face {
+        padding: 22px 20px;
+      }
+
+      .answer-row {
+        flex-direction: column;
+      }
+
+      .answer-row button,
+      .quiz-actions button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>영어 퀴즈 & 플래시카드 메이커</h1>
+      <p>
+        한 줄에 하나씩 <strong>영어 + 한국어 뜻</strong>을 넣으면, 퀴즈와 플래시카드 학습을 바로 할 수 있는 암기용 사이트입니다.<br />
+        예시 입력: <strong>Organizing documents 서류를 정돈하다</strong>
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>1. 문장 입력</h2>
+        <p class="helper">
+          영어 문장 뒤에 한국어 뜻을 붙여서 입력하세요. 사이트는 <strong>첫 번째 한글부터 한국어 뜻</strong>으로 인식합니다.<br />
+          영어 정답에 여러 표현을 허용하고 싶다면 <strong>|</strong> 또는 대괄호를 사용할 수 있습니다.<br />
+          예: <strong>Plugging[unplugging] a cord 코드를 꽂다</strong>
+        </p>
+        <textarea id="sourceInput" spellcheck="false" placeholder="예)&#10;Organizing documents 서류를 정돈하다&#10;Looking out a window 창밖을 보다"></textarea>
+
+        <div class="action-row">
+          <button id="loadSampleBtn">예시 불러오기</button>
+          <button id="clearInputBtn">입력 지우기</button>
+          <button id="saveInputBtn">로컬 저장</button>
+          <button id="startBtn" class="primary">퀴즈 시작</button>
+        </div>
+
+        <div id="parseInfo" class="parse-info">입력한 문장을 확인하는 중입니다.</div>
+      </section>
+
+      <section class="panel">
+        <h2>2. 퀴즈 설정</h2>
+        <div class="setting-grid">
+          <div class="setting-row">
+            <label><input type="radio" name="mode" value="en-to-ko" checked /> 영어 → 한국어</label>
+            <label><input type="radio" name="mode" value="ko-to-en" /> 한국어 → 영어</label>
+            <label><input type="radio" name="mode" value="mixed" /> 랜덤 혼합</label>
+          </div>
+          <div class="setting-row">
+            <label><input type="checkbox" id="randomOrder" checked /> 문제 순서 섞기</label>
+            <label><input type="checkbox" id="ignoreSpaces" checked /> 띄어쓰기 차이 무시</label>
+            <label><input type="checkbox" id="ignoreCase" checked /> 영어 대소문자 무시</label>
+          </div>
+        </div>
+        <p class="small-note">
+          엔터를 누르면 정답 확인, 이미 채점된 문제에서는 엔터로 다음 문제로 넘어갑니다.
+        </p>
+      </section>
+
+
+      <section class="panel">
+        <h2>3. 단어 학습 카드</h2>
+        <p class="helper">
+          Quizlet처럼 카드 한 장씩 보면서 외울 수 있습니다. 기본은 <strong>한국어 먼저</strong>이고,
+          카드를 누르면 영어로 뒤집힙니다.
+        </p>
+        <div class="setting-grid">
+          <div class="setting-row">
+            <label><input type="radio" name="studyMode" value="ko-front" checked /> 한국어 먼저</label>
+            <label><input type="radio" name="studyMode" value="en-front" /> 영어 먼저</label>
+            <label><input type="radio" name="studyMode" value="mixed" /> 랜덤</label>
+            <label><input type="checkbox" id="studyRandomOrder" checked /> 카드 순서 섞기</label>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="startStudyBtn" class="primary">단어 카드 시작</button>
+          <button id="shuffleStudyBtn">카드 다시 섞기</button>
+        </div>
+
+        <div id="studySection" class="study-wrap hidden">
+          <div class="quiz-header">
+            <strong id="studyProgressText">카드 0 / 0</strong>
+            <strong id="studyModeBadge">한국어 먼저</strong>
+          </div>
+
+          <div class="progress-wrap" aria-hidden="true">
+            <div id="studyProgressBar" class="progress-bar"></div>
+          </div>
+
+          <button id="studyCard" class="flashcard" type="button" aria-label="학습 카드">
+            <div class="flashcard-inner">
+              <div class="flashcard-face flashcard-front">
+                <span id="flashcardFrontLabel" class="flashcard-tag">앞면 · 한국어</span>
+                <div id="flashcardFrontText" class="flashcard-text"></div>
+                <div class="flashcard-hint">카드를 누르면 뒤집힙니다.</div>
+              </div>
+              <div class="flashcard-face flashcard-back">
+                <span id="flashcardBackLabel" class="flashcard-tag">뒷면 · 영어</span>
+                <div id="flashcardBackText" class="flashcard-text"></div>
+                <div class="flashcard-hint">다시 누르면 앞면으로 돌아갑니다.</div>
+              </div>
+            </div>
+          </button>
+
+          <p id="studyHintText" class="small-note" style="margin-top: 14px; margin-bottom: 0;">
+            현재 카드는 앞면이 보이는 상태입니다.
+          </p>
+
+          <div class="quiz-actions" style="margin-top: 14px;">
+            <button id="studyPrevBtn">이전 카드</button>
+            <button id="flipCardBtn">카드 뒤집기</button>
+            <button id="studyNextBtn" class="primary">다음 카드</button>
+            <button id="studyRestartBtn">처음부터 다시</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="quizSection" class="panel hidden">
+        <div class="quiz-header">
+          <strong id="progressText">문제 0 / 0</strong>
+          <strong id="scoreText">점수 0</strong>
+        </div>
+
+        <div class="progress-wrap" aria-hidden="true">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="modeBadge" class="mode-badge">영어 → 한국어</div>
+        <div id="questionGuide" class="question-guide">문제를 보고 답을 입력하세요.</div>
+
+        <div class="question-card">
+          <div id="questionText" class="question-text"></div>
+        </div>
+
+        <div class="answer-row">
+          <input id="answerInput" type="text" autocomplete="off" placeholder="정답을 입력하세요" />
+          <button id="checkBtn" class="primary">정답 확인</button>
+        </div>
+
+        <div class="quiz-actions">
+          <button id="showAnswerBtn">정답 보기</button>
+          <button id="skipBtn">건너뛰기</button>
+          <button id="nextBtn" disabled>다음 문제</button>
+          <button id="restartBtn">처음부터 다시</button>
+        </div>
+
+        <div id="feedback" class="feedback hidden"></div>
+        <div id="answerReveal" class="answer-reveal hidden"></div>
+      </section>
+
+      <section id="resultSection" class="panel hidden">
+        <h2>4. 결과</h2>
+        <div id="resultSummary"></div>
+
+        <div class="review-actions" style="margin-top: 14px;">
+          <button id="retryWrongBtn">오답만 다시 풀기</button>
+        </div>
+
+        <div id="reviewList" class="review-list"></div>
+
+        <p class="footer-note">
+          이 파일은 브라우저에서 바로 열 수 있는 단일 HTML 버전입니다. 지금은 퀴즈와 플래시카드 학습이 함께 들어 있고,
+          나중에 원하면 오답노트 저장 / 객관식 / 로그인 / 배포용 버전까지 확장할 수 있습니다.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const sampleData = `Operating a computer 컴퓨터를 조작하다
+Arranging the chairs 의자를 배치하다
+Searching through some files 파일을 뒤지다
+Moving furniture 가구를 옮기다
+Typing on a keyboard 키보드를 치다
+Turning on a lamp 램프를 켜다
+Passing papers 서류를 전달하다
+Organizing documents 서류를 정돈하다
+Giving a presentation 발표하다
+Looking out a window 창밖을 보다
+Plugging[unplugging] a cord 코드를 꽂다
+Facing a screen 스크린을 마주보다
+Picking up a laptop 노트북 컴퓨터를 집어 들다
+Taking notes on paper 종이에 메모하다`;
+
+    const STORAGE_KEYS = {
+      data: 'englishQuizMakerData',
+      settings: 'englishQuizMakerSettings'
+    };
+
+    const state = {
+      deck: [],
+      currentIndex: 0,
+      score: 0,
+      results: [],
+      answered: false,
+      study: {
+        deck: [],
+        currentIndex: 0,
+        flipped: false
+      }
+    };
+
+    const els = {
+      sourceInput: document.getElementById('sourceInput'),
+      parseInfo: document.getElementById('parseInfo'),
+      loadSampleBtn: document.getElementById('loadSampleBtn'),
+      clearInputBtn: document.getElementById('clearInputBtn'),
+      saveInputBtn: document.getElementById('saveInputBtn'),
+      startBtn: document.getElementById('startBtn'),
+      startStudyBtn: document.getElementById('startStudyBtn'),
+      randomOrder: document.getElementById('randomOrder'),
+      ignoreSpaces: document.getElementById('ignoreSpaces'),
+      ignoreCase: document.getElementById('ignoreCase'),
+      studyRandomOrder: document.getElementById('studyRandomOrder'),
+      quizSection: document.getElementById('quizSection'),
+      studySection: document.getElementById('studySection'),
+      resultSection: document.getElementById('resultSection'),
+      studyProgressText: document.getElementById('studyProgressText'),
+      studyProgressBar: document.getElementById('studyProgressBar'),
+      studyModeBadge: document.getElementById('studyModeBadge'),
+      studyCard: document.getElementById('studyCard'),
+      flashcardFrontLabel: document.getElementById('flashcardFrontLabel'),
+      flashcardFrontText: document.getElementById('flashcardFrontText'),
+      flashcardBackLabel: document.getElementById('flashcardBackLabel'),
+      flashcardBackText: document.getElementById('flashcardBackText'),
+      studyHintText: document.getElementById('studyHintText'),
+      studyPrevBtn: document.getElementById('studyPrevBtn'),
+      flipCardBtn: document.getElementById('flipCardBtn'),
+      studyNextBtn: document.getElementById('studyNextBtn'),
+      studyRestartBtn: document.getElementById('studyRestartBtn'),
+      shuffleStudyBtn: document.getElementById('shuffleStudyBtn'),
+      progressText: document.getElementById('progressText'),
+      scoreText: document.getElementById('scoreText'),
+      progressBar: document.getElementById('progressBar'),
+      modeBadge: document.getElementById('modeBadge'),
+      questionGuide: document.getElementById('questionGuide'),
+      questionText: document.getElementById('questionText'),
+      answerInput: document.getElementById('answerInput'),
+      checkBtn: document.getElementById('checkBtn'),
+      showAnswerBtn: document.getElementById('showAnswerBtn'),
+      skipBtn: document.getElementById('skipBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      restartBtn: document.getElementById('restartBtn'),
+      feedback: document.getElementById('feedback'),
+      answerReveal: document.getElementById('answerReveal'),
+      resultSummary: document.getElementById('resultSummary'),
+      reviewList: document.getElementById('reviewList'),
+      retryWrongBtn: document.getElementById('retryWrongBtn')
+    };
+
+    function escapeHtml(value = '') {
+      return String(value).replace(/[&<>"']/g, (char) => {
+        const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return map[char] || char;
+      });
+    }
+
+    function cleanSpacing(text) {
+      return String(text || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function parseInput(text) {
+      const lines = String(text || '').split(/\r?\n/);
+      const items = [];
+      const invalid = [];
+      const seen = new Set();
+
+      lines.forEach((rawLine, index) => {
+        const line = rawLine.trim();
+        if (!line) return;
+        if (line.startsWith('#') || line.startsWith('//')) return;
+
+        const hangulIndex = line.search(/[가-힣ㄱ-ㅎㅏ-ㅣ]/);
+        if (hangulIndex <= 0) {
+          invalid.push({
+            lineNo: index + 1,
+            text: line,
+            reason: '영어 뒤에 한국어 뜻이 필요합니다.'
+          });
+          return;
+        }
+
+        const english = cleanSpacing(line.slice(0, hangulIndex));
+        const korean = cleanSpacing(line.slice(hangulIndex));
+
+        if (!english || !korean) {
+          invalid.push({
+            lineNo: index + 1,
+            text: line,
+            reason: '영어와 한국어가 모두 있어야 합니다.'
+          });
+          return;
+        }
+
+        const key = `${english}|||${korean}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        items.push({
+          id: `${index + 1}-${english}-${korean}`,
+          english,
+          korean
+        });
+      });
+
+      return { items, invalid };
+    }
+
+    function refreshParseInfo() {
+      const { items, invalid } = parseInput(els.sourceInput.value);
+
+      if (!els.sourceInput.value.trim()) {
+        els.parseInfo.innerHTML = '문장을 입력하면 자동으로 문제 수를 계산합니다.';
+        return;
+      }
+
+      const invalidPreview = invalid.slice(0, 3).map((item) => {
+        return `${item.lineNo}번 줄: ${escapeHtml(item.text)}`;
+      });
+
+      let html = `<strong>${items.length}개</strong> 문장을 인식했습니다.`;
+
+      if (invalid.length > 0) {
+        html += `<br /><strong>${invalid.length}개</strong> 줄은 형식을 확인해 주세요.`;
+        html += `<br />예: ${invalidPreview.join(' / ')}`;
+      } else {
+        html += '<br />형식이 정상입니다. 바로 퀴즈를 시작할 수 있어요.';
+      }
+
+      els.parseInfo.innerHTML = html;
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function getSelectedMode() {
+      const selected = document.querySelector('input[name="mode"]:checked');
+      return selected ? selected.value : 'en-to-ko';
+    }
+
+    function getSelectedStudyMode() {
+      const selected = document.querySelector('input[name="studyMode"]:checked');
+      return selected ? selected.value : 'ko-front';
+    }
+
+    function saveSettings() {
+      const settings = {
+        mode: getSelectedMode(),
+        studyMode: getSelectedStudyMode(),
+        randomOrder: els.randomOrder.checked,
+        studyRandomOrder: els.studyRandomOrder.checked,
+        ignoreSpaces: els.ignoreSpaces.checked,
+        ignoreCase: els.ignoreCase.checked
+      };
+
+      try {
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
+      } catch (error) {
+        console.warn('설정을 저장하지 못했습니다.', error);
+      }
+    }
+
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.settings);
+        if (!raw) return;
+        const settings = JSON.parse(raw);
+
+        if (settings.mode) {
+          const radio = document.querySelector(`input[name="mode"][value="${settings.mode}"]`);
+          if (radio) radio.checked = true;
+        }
+        if (settings.studyMode) {
+          const radio = document.querySelector(`input[name="studyMode"][value="${settings.studyMode}"]`);
+          if (radio) radio.checked = true;
+        }
+        if (typeof settings.randomOrder === 'boolean') els.randomOrder.checked = settings.randomOrder;
+        if (typeof settings.studyRandomOrder === 'boolean') els.studyRandomOrder.checked = settings.studyRandomOrder;
+        if (typeof settings.ignoreSpaces === 'boolean') els.ignoreSpaces.checked = settings.ignoreSpaces;
+        if (typeof settings.ignoreCase === 'boolean') els.ignoreCase.checked = settings.ignoreCase;
+      } catch (error) {
+        console.warn('설정을 불러오지 못했습니다.', error);
+      }
+    }
+
+    function saveInputData() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.data, els.sourceInput.value);
+      } catch (error) {
+        console.warn('입력값을 저장하지 못했습니다.', error);
+      }
+    }
+
+    function loadInputData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.data);
+        els.sourceInput.value = saved && saved.trim() ? saved : sampleData;
+      } catch (error) {
+        els.sourceInput.value = sampleData;
+      }
+    }
+
+    function normalizeText(text, direction) {
+      let value = String(text || '').trim();
+      value = value
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/[\[\]]/g, '')
+        .replace(/[.,!?;:。！？]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (direction === 'ko-to-en' && els.ignoreCase.checked) {
+        value = value.toLowerCase();
+      }
+
+      if (els.ignoreSpaces.checked) {
+        value = value.replace(/\s+/g, '');
+      }
+
+      return value;
+    }
+
+    function expandBracketVariants(text) {
+      const results = new Set();
+
+      function helper(str) {
+        const open = str.indexOf('[');
+        if (open === -1) {
+          const cleaned = cleanSpacing(str);
+          if (cleaned) results.add(cleaned);
+          return;
+        }
+
+        const close = str.indexOf(']', open);
+        if (close === -1) {
+          const cleaned = cleanSpacing(str.replace(/[\[\]]/g, ''));
+          if (cleaned) results.add(cleaned);
+          return;
+        }
+
+        const before = str.slice(0, open);
+        const inside = str.slice(open + 1, close);
+        const after = str.slice(close + 1);
+        const options = inside.split(/[|/]/).map((part) => cleanSpacing(part)).filter(Boolean);
+
+        const attachedWordMatch = before.match(/(\S+)$/);
+        if (attachedWordMatch && before && !/\s$/.test(before)) {
+          const attachedWord = attachedWordMatch[1];
+          const prefix = before.slice(0, before.length - attachedWord.length);
+          helper(prefix + attachedWord + after);
+          options.forEach((option) => helper(prefix + option + after));
+        } else {
+          helper(before + after);
+          options.forEach((option) => helper(before + option + after));
+        }
+      }
+
+      helper(String(text || ''));
+      const cleanedOriginal = cleanSpacing(String(text || '').replace(/[\[\]]/g, ''));
+      if (cleanedOriginal) results.add(cleanedOriginal);
+      return [...results];
+    }
+
+    function buildAcceptedAnswers(card) {
+      const rawAnswer = card.direction === 'en-to-ko' ? card.korean : card.english;
+      const set = new Set();
+
+      if (card.direction === 'ko-to-en') {
+        rawAnswer.split('|').map((part) => cleanSpacing(part)).filter(Boolean).forEach((part) => {
+          expandBracketVariants(part).forEach((variant) => set.add(variant));
+        });
+      } else {
+        rawAnswer.split('|').map((part) => cleanSpacing(part)).filter(Boolean).forEach((part) => {
+          if (part) set.add(part);
+        });
+      }
+
+      set.add(cleanSpacing(rawAnswer));
+      return [...set].filter(Boolean);
+    }
+
+    function getCurrentCard() {
+      return state.deck[state.currentIndex];
+    }
+
+    function getQuestionText(card) {
+      return card.direction === 'en-to-ko' ? card.english : card.korean;
+    }
+
+    function getCorrectAnswer(card) {
+      return card.direction === 'en-to-ko' ? card.korean : card.english;
+    }
+
+    function buildDeck(items) {
+      const mode = getSelectedMode();
+      let deck = items.map((item) => {
+        const direction = mode === 'mixed'
+          ? (Math.random() < 0.5 ? 'en-to-ko' : 'ko-to-en')
+          : mode;
+
+        return {
+          ...item,
+          direction
+        };
+      });
+
+      if (els.randomOrder.checked) {
+        deck = shuffle(deck);
+      }
+
+      return deck;
+    }
+
+
+    function getStudySideLabel(card, side) {
+      const isKoreanFront = card.studyFront === 'ko-front';
+      const frontLabel = isKoreanFront ? '한국어' : '영어';
+      const backLabel = isKoreanFront ? '영어' : '한국어';
+      return side === 'front' ? `앞면 · ${frontLabel}` : `뒷면 · ${backLabel}`;
+    }
+
+    function getStudySideText(card, side) {
+      const isKoreanFront = card.studyFront === 'ko-front';
+      if (side === 'front') {
+        return isKoreanFront ? card.korean : card.english;
+      }
+      return isKoreanFront ? card.english : card.korean;
+    }
+
+    function getStudyModeText(card) {
+      if (!card) return '한국어 먼저';
+      return card.studyFront === 'ko-front' ? '한국어 먼저' : '영어 먼저';
+    }
+
+    function buildStudyDeck(items) {
+      const mode = getSelectedStudyMode();
+      let deck = items.map((item) => {
+        const studyFront = mode === 'mixed'
+          ? (Math.random() < 0.5 ? 'ko-front' : 'en-front')
+          : mode;
+
+        return {
+          ...item,
+          studyFront
+        };
+      });
+
+      if (els.studyRandomOrder.checked) {
+        deck = shuffle(deck);
+      }
+
+      return deck;
+    }
+
+    function updateStudyHeader() {
+      const total = state.study.deck.length;
+      const currentCard = state.study.deck[state.study.currentIndex];
+      const progressPercent = total ? ((state.study.currentIndex + 1) / total) * 100 : 0;
+
+      els.studyProgressText.textContent = total
+        ? `카드 ${state.study.currentIndex + 1} / ${total}`
+        : '카드 0 / 0';
+      els.studyModeBadge.textContent = getStudyModeText(currentCard);
+      els.studyProgressBar.style.width = `${progressPercent}%`;
+    }
+
+    function renderStudyCard() {
+      const card = state.study.deck[state.study.currentIndex];
+      if (!card) return;
+
+      updateStudyHeader();
+      els.studyCard.classList.toggle('is-flipped', state.study.flipped);
+      els.flashcardFrontLabel.textContent = getStudySideLabel(card, 'front');
+      els.flashcardBackLabel.textContent = getStudySideLabel(card, 'back');
+      els.flashcardFrontText.textContent = getStudySideText(card, 'front');
+      els.flashcardBackText.textContent = getStudySideText(card, 'back');
+      els.studyHintText.textContent = state.study.flipped
+        ? '현재 카드는 뒷면이 보이는 상태입니다. 다시 누르면 앞면으로 돌아갑니다.'
+        : '현재 카드는 앞면이 보이는 상태입니다. 카드를 누르면 반대쪽 뜻이 나옵니다.';
+
+      els.studyPrevBtn.disabled = state.study.currentIndex === 0;
+      els.studyNextBtn.disabled = state.study.currentIndex === state.study.deck.length - 1;
+    }
+
+    function startStudy(overrideDeck = null) {
+      const { items } = parseInput(els.sourceInput.value);
+      const deck = overrideDeck ? [...overrideDeck] : buildStudyDeck(items);
+
+      if (!deck.length) {
+        alert('단어 카드로 만들 문장을 먼저 입력해 주세요.');
+        return;
+      }
+
+      state.study.deck = deck;
+      state.study.currentIndex = 0;
+      state.study.flipped = false;
+
+      els.studySection.classList.remove('hidden');
+      renderStudyCard();
+      els.studySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function flipStudyCard() {
+      if (!state.study.deck.length) return;
+      state.study.flipped = !state.study.flipped;
+      renderStudyCard();
+    }
+
+    function goStudyNext() {
+      if (!state.study.deck.length) return;
+      if (state.study.currentIndex >= state.study.deck.length - 1) return;
+      state.study.currentIndex += 1;
+      state.study.flipped = false;
+      renderStudyCard();
+    }
+
+    function goStudyPrev() {
+      if (!state.study.deck.length) return;
+      if (state.study.currentIndex <= 0) return;
+      state.study.currentIndex -= 1;
+      state.study.flipped = false;
+      renderStudyCard();
+    }
+
+    function restartStudy() {
+      if (!state.study.deck.length) {
+        startStudy();
+        return;
+      }
+
+      state.study.currentIndex = 0;
+      state.study.flipped = false;
+      renderStudyCard();
+      els.studySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function shuffleStudyCards() {
+      const { items } = parseInput(els.sourceInput.value);
+      if (!items.length) {
+        alert('단어 카드로 만들 문장을 먼저 입력해 주세요.');
+        return;
+      }
+      startStudy(buildStudyDeck(items));
+    }
+
+    function setFeedback(type, html) {
+      els.feedback.className = `feedback ${type}`;
+      els.feedback.innerHTML = html;
+      els.feedback.classList.remove('hidden');
+    }
+
+    function hideFeedback() {
+      els.feedback.className = 'feedback hidden';
+      els.feedback.innerHTML = '';
+    }
+
+    function renderAnswerReveal(card) {
+      els.answerReveal.innerHTML = `
+        <h3>정답</h3>
+        <div class="answer-pair">
+          <div><span class="chip">영어</span>${escapeHtml(card.english)}</div>
+          <div><span class="chip">한국어</span>${escapeHtml(card.korean)}</div>
+        </div>
+      `;
+      els.answerReveal.classList.remove('hidden');
+    }
+
+    function hideAnswerReveal() {
+      els.answerReveal.classList.add('hidden');
+      els.answerReveal.innerHTML = '';
+    }
+
+    function updateQuizHeader() {
+      const total = state.deck.length;
+      const solvedCount = state.results.length;
+      const progressPercent = total ? (solvedCount / total) * 100 : 0;
+      els.progressText.textContent = `문제 ${state.currentIndex + 1} / ${total}`;
+      els.scoreText.textContent = `점수 ${state.score}`;
+      els.progressBar.style.width = `${progressPercent}%`;
+    }
+
+    function renderQuestion() {
+      const card = getCurrentCard();
+      if (!card) return;
+
+      state.answered = false;
+      updateQuizHeader();
+      hideFeedback();
+      hideAnswerReveal();
+
+      const isEnglishToKorean = card.direction === 'en-to-ko';
+      els.modeBadge.textContent = isEnglishToKorean ? '영어 → 한국어' : '한국어 → 영어';
+      els.questionGuide.textContent = isEnglishToKorean
+        ? '영어 문장을 보고 한국어 뜻을 입력하세요.'
+        : '한국어 뜻을 보고 영어 문장을 입력하세요.';
+      els.questionText.textContent = getQuestionText(card);
+      els.answerInput.value = '';
+      els.answerInput.placeholder = isEnglishToKorean
+        ? '한국어 뜻을 입력하세요'
+        : '영어 문장을 입력하세요';
+      els.answerInput.disabled = false;
+      els.checkBtn.disabled = false;
+      els.showAnswerBtn.disabled = false;
+      els.skipBtn.disabled = false;
+      els.nextBtn.disabled = true;
+      els.nextBtn.textContent = state.currentIndex === state.deck.length - 1 ? '결과 보기' : '다음 문제';
+      els.answerInput.focus();
+    }
+
+    function startQuiz(overrideDeck = null) {
+      const { items } = parseInput(els.sourceInput.value);
+      const deck = overrideDeck
+        ? (els.randomOrder.checked ? shuffle(overrideDeck) : [...overrideDeck])
+        : buildDeck(items);
+
+      if (!deck.length) {
+        alert('퀴즈로 만들 문장을 먼저 입력해 주세요.');
+        return;
+      }
+
+      state.deck = deck;
+      state.currentIndex = 0;
+      state.score = 0;
+      state.results = [];
+      state.answered = false;
+
+      els.quizSection.classList.remove('hidden');
+      els.resultSection.classList.add('hidden');
+      renderQuestion();
+      els.quizSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function completeCurrentQuestion(isCorrect, userAnswer, feedbackHtml, feedbackType) {
+      if (state.answered) return;
+
+      const card = getCurrentCard();
+      const correctAnswer = getCorrectAnswer(card);
+
+      state.answered = true;
+      if (isCorrect) {
+        state.score += 1;
+      }
+
+      state.results.push({
+        ...card,
+        questionText: getQuestionText(card),
+        correctAnswer,
+        userAnswer: cleanSpacing(userAnswer),
+        isCorrect
+      });
+
+      setFeedback(feedbackType, feedbackHtml);
+      renderAnswerReveal(card);
+      updateQuizHeader();
+
+      els.answerInput.disabled = true;
+      els.checkBtn.disabled = true;
+      els.showAnswerBtn.disabled = true;
+      els.skipBtn.disabled = true;
+      els.nextBtn.disabled = false;
+      els.nextBtn.focus();
+    }
+
+    function checkAnswer() {
+      if (state.answered) return;
+
+      const card = getCurrentCard();
+      const userAnswer = els.answerInput.value.trim();
+      if (!userAnswer) {
+        alert('정답을 입력해 주세요.');
+        els.answerInput.focus();
+        return;
+      }
+
+      const normalizedUser = normalizeText(userAnswer, card.direction);
+      const acceptedAnswers = buildAcceptedAnswers(card);
+      const normalizedAcceptedAnswers = acceptedAnswers.map((answer) => normalizeText(answer, card.direction));
+      const isCorrect = normalizedAcceptedAnswers.includes(normalizedUser);
+
+      const feedbackHtml = isCorrect
+        ? `<strong>정답입니다!</strong> 잘 맞혔어요.`
+        : `<strong>오답입니다.</strong> 입력한 답: <strong>${escapeHtml(userAnswer)}</strong>`;
+
+      completeCurrentQuestion(
+        isCorrect,
+        userAnswer,
+        feedbackHtml,
+        isCorrect ? 'success' : 'error'
+      );
+    }
+
+    function showAnswerAsWrong(message, type = 'warning') {
+      if (state.answered) return;
+      const userAnswer = els.answerInput.value.trim();
+      completeCurrentQuestion(false, userAnswer, message, type);
+    }
+
+    function goNext() {
+      if (!state.answered) {
+        alert('먼저 정답 확인을 하거나 정답 보기를 눌러 주세요.');
+        return;
+      }
+
+      if (state.currentIndex >= state.deck.length - 1) {
+        finishQuiz();
+        return;
+      }
+
+      state.currentIndex += 1;
+      renderQuestion();
+    }
+
+    function finishQuiz() {
+      els.resultSection.classList.remove('hidden');
+      const total = state.deck.length;
+      const correct = state.score;
+      const wrong = total - correct;
+      const accuracy = total ? Math.round((correct / total) * 100) : 0;
+
+      els.resultSummary.innerHTML = `
+        <div class="stats">
+          <div class="stat-card"><strong>${correct}</strong><span>정답 수</span></div>
+          <div class="stat-card"><strong>${wrong}</strong><span>오답 수</span></div>
+          <div class="stat-card"><strong>${accuracy}%</strong><span>정답률</span></div>
+        </div>
+      `;
+
+      const wrongItems = state.results.filter((item) => !item.isCorrect);
+      els.retryWrongBtn.disabled = wrongItems.length === 0;
+      renderReviewList();
+      els.resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderReviewList() {
+      if (!state.results.length) {
+        els.reviewList.innerHTML = '';
+        return;
+      }
+
+      els.reviewList.innerHTML = state.results.map((result, index) => {
+        const statusClass = result.isCorrect ? 'correct' : 'wrong';
+        const statusText = result.isCorrect ? '정답' : '오답';
+        const directionText = result.direction === 'en-to-ko' ? '영어 → 한국어' : '한국어 → 영어';
+
+        return `
+          <article class="review-card ${statusClass}">
+            <div class="review-head">
+              <strong>${index + 1}. ${escapeHtml(directionText)}</strong>
+              <span class="status-pill ${statusClass}">${statusText}</span>
+            </div>
+            <div class="line"><span class="label">문제</span>${escapeHtml(result.questionText)}</div>
+            <div class="line"><span class="label">내 답</span>${result.userAnswer ? escapeHtml(result.userAnswer) : '<em>입력 없음</em>'}</div>
+            <div class="line"><span class="label">정답</span>${escapeHtml(result.correctAnswer)}</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function retryWrongAnswers() {
+      const wrongDeck = state.results
+        .filter((result) => !result.isCorrect)
+        .map((result) => ({
+          id: result.id,
+          english: result.english,
+          korean: result.korean,
+          direction: result.direction
+        }));
+
+      if (!wrongDeck.length) {
+        alert('오답이 없어서 다시 풀 문제가 없습니다.');
+        return;
+      }
+
+      startQuiz(wrongDeck);
+    }
+
+    function bindEvents() {
+      els.sourceInput.addEventListener('input', () => {
+        saveInputData();
+        refreshParseInfo();
+      });
+
+      els.loadSampleBtn.addEventListener('click', () => {
+        els.sourceInput.value = sampleData;
+        saveInputData();
+        refreshParseInfo();
+      });
+
+      els.clearInputBtn.addEventListener('click', () => {
+        els.sourceInput.value = '';
+        saveInputData();
+        refreshParseInfo();
+        els.sourceInput.focus();
+      });
+
+      els.saveInputBtn.addEventListener('click', () => {
+        saveInputData();
+        saveSettings();
+        alert('현재 입력과 설정을 브라우저에 저장했습니다.');
+      });
+
+      document.querySelectorAll('input[name="mode"], #randomOrder, #ignoreSpaces, #ignoreCase, input[name="studyMode"], #studyRandomOrder').forEach((element) => {
+        element.addEventListener('change', saveSettings);
+      });
+
+      els.startBtn.addEventListener('click', () => startQuiz());
+      els.startStudyBtn.addEventListener('click', () => startStudy());
+      els.shuffleStudyBtn.addEventListener('click', shuffleStudyCards);
+      els.studyCard.addEventListener('click', flipStudyCard);
+      els.flipCardBtn.addEventListener('click', flipStudyCard);
+      els.studyPrevBtn.addEventListener('click', goStudyPrev);
+      els.studyNextBtn.addEventListener('click', goStudyNext);
+      els.studyRestartBtn.addEventListener('click', restartStudy);
+      els.checkBtn.addEventListener('click', checkAnswer);
+      els.showAnswerBtn.addEventListener('click', () => {
+        showAnswerAsWrong('<strong>정답을 확인했습니다.</strong> 이 문제는 오답으로 기록됩니다.', 'warning');
+      });
+      els.skipBtn.addEventListener('click', () => {
+        showAnswerAsWrong('<strong>건너뛰었습니다.</strong> 이 문제는 오답으로 기록됩니다.', 'warning');
+      });
+      els.nextBtn.addEventListener('click', goNext);
+      els.restartBtn.addEventListener('click', () => startQuiz());
+      els.retryWrongBtn.addEventListener('click', retryWrongAnswers);
+
+      els.answerInput.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        if (state.answered) {
+          goNext();
+        } else {
+          checkAnswer();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        const active = document.activeElement;
+        const tagName = active ? active.tagName : '';
+        const isTyping = tagName === 'INPUT' || tagName === 'TEXTAREA';
+        if (isTyping || els.studySection.classList.contains('hidden') || !state.study.deck.length) {
+          return;
+        }
+
+        if (event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          flipStudyCard();
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          goStudyNext();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          goStudyPrev();
+        }
+      });
+    }
+
+    function init() {
+      loadSettings();
+      loadInputData();
+      refreshParseInfo();
+      bindEvents();
+    }
+
+    init();
+  </script>
+</body>
+</html>
